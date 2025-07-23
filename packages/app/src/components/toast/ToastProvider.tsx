@@ -8,26 +8,32 @@ import { debounce } from "../../utils";
 type ShowToast = (message: string, type: ToastType) => void;
 type Hide = () => void;
 
-const ToastContext = createContext<{
-  message: string;
-  type: ToastType;
+const ToastCommandContext = createContext<{
   show: ShowToast;
   hide: Hide;
 }>({
-  ...initialState,
   show: () => null,
   hide: () => null,
 });
 
+const ToastStateContext = createContext<{
+  message: string;
+  type: ToastType;
+}>({
+  ...initialState,
+});
+
 const DEFAULT_DELAY = 3000;
 
-const useToastContext = () => useContext(ToastContext);
+const useToastCommandContext = () => useContext(ToastCommandContext);
+const useToastStateContexts = () => useContext(ToastStateContext);
+
 export const useToastCommand = () => {
-  const { show, hide } = useToastContext();
+  const { show, hide } = useToastCommandContext();
   return { show, hide };
 };
 export const useToastState = () => {
-  const { message, type } = useToastContext();
+  const { message, type } = useToastStateContexts();
   return { message, type };
 };
 
@@ -44,9 +50,11 @@ export const ToastProvider = memo(({ children }: PropsWithChildren) => {
   };
 
   return (
-    <ToastContext value={{ show: showWithHide, hide, ...state }}>
-      {children}
-      {visible && createPortal(<Toast />, document.body)}
-    </ToastContext>
+    <ToastCommandContext.Provider value={{ show: showWithHide, hide }}>
+      <ToastStateContext.Provider value={{ message: state.message, type: state.type }}>
+        {children}
+        {visible && createPortal(<Toast />, document.body)}
+      </ToastStateContext.Provider>
+    </ToastCommandContext.Provider>
   );
 });
