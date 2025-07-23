@@ -4,6 +4,8 @@ import { createPortal } from "react-dom";
 import { Toast } from "./Toast";
 import { createActions, initialState, toastReducer, type ToastType } from "./toastReducer";
 import { debounce } from "../../utils";
+import { useAutoCallback } from "@hanghae-plus/lib";
+import { useMemo } from "@hanghae-plus/lib/src/hooks";
 
 type ShowToast = (message: string, type: ToastType) => void;
 type Hide = () => void;
@@ -39,19 +41,24 @@ export const useToastState = () => {
 
 export const ToastProvider = memo(({ children }: PropsWithChildren) => {
   const [state, dispatch] = useReducer(toastReducer, initialState);
-  const { show, hide } = createActions(dispatch);
+  const { show, hide } = useMemo(() => createActions(dispatch), [dispatch]);
   const visible = state.message !== "";
 
-  const hideAfter = debounce(hide, DEFAULT_DELAY);
+  const hideAfter = useMemo(() => {
+    debounce(hide, DEFAULT_DELAY);
+  }, [hide]);
 
-  const showWithHide: ShowToast = (...args) => {
-    show(...args);
+  const showWithHide = useAutoCallback((message: string, type: ToastType) => {
+    show(message, type);
     hideAfter();
-  };
+  });
+
+  const commandValue = useMemo(() => ({ show: showWithHide, hide }), [showWithHide, hide]);
+  const stateValue = useMemo(() => ({ message: state.message, type: state.type }), [state.message, state.type]);
 
   return (
-    <ToastCommandContext.Provider value={{ show: showWithHide, hide }}>
-      <ToastStateContext.Provider value={{ message: state.message, type: state.type }}>
+    <ToastCommandContext.Provider value={commandValue}>
+      <ToastStateContext.Provider value={stateValue}>
         {children}
         {visible && createPortal(<Toast />, document.body)}
       </ToastStateContext.Provider>
