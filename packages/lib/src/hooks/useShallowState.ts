@@ -1,6 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { shallowEquals } from "../equals";
+import { useCallback } from "./useCallback";
 
 // shallowEquals를 사용하여 상태 변경을 감지하는 훅을 구현합니다.
 function resolveNextState<T>(prevState: T, newValue: SetStateAction<T>): T {

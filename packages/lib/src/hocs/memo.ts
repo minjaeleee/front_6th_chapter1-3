@@ -1,5 +1,6 @@
-import { type FunctionComponent, useRef } from "react";
+import { type FunctionComponent } from "react";
 import { shallowEquals } from "../equals";
+import { useRef } from "../hooks";
 
 // memo HOC는 컴포넌트의 props를 얕은 비교하여 불필요한 렌더링을 방지합니다.
 export function memo<P extends object>(Component: FunctionComponent<P>, equals = shallowEquals): FunctionComponent<P> {
